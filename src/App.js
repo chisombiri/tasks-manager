@@ -1,9 +1,10 @@
 import "./App.css";
+import TaskManager from "./components/task-manager/TaskManager";
 
 function App() {
   return (
     <div>
-      <h1>Hello World!!!</h1>
+      <TaskManager />
     </div>
   );
 }
