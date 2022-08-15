@@ -130,7 +130,7 @@ const TaskManager = () => {
           {/* Individual Task */}
 
           {tasks.length === 0 ? (
-            <p className="--text-light">No task added...</p>
+            <p className="--text-light">No task added yet...</p>
           ) : (
             <div>
               {tasks.map((task) => {
