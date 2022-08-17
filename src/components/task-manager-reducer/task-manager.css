@@ -1,0 +1,36 @@
+body {
+  background-color: var(--color-primary);
+  overflow: hidden;
+  /* avoid min-height to prevent glitches on css animation */
+}
+form.form input {
+  width: 73%;
+}
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background-color: var(--color-grey);
+  padding: 1rem;
+  margin: 1rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+.complete {
+  position: relative;
+  background-color: #fff;
+  border-left: 5px solid orangered;
+}
+
+.complete::after {
+  content: "Completed";
+  position: absolute;
+  right: 1rem;
+  bottom: 3px;
+  background-color: orangered;
+  color: #fff;
+  padding: 2px;
+  border-radius: 3px;
+}
