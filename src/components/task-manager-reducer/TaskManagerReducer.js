@@ -3,6 +3,7 @@ import useLocalStorage from "use-local-storage";
 import "./task-manager.css";
 import Task from "../task/Task";
 import Alert from "../alert/Alert";
+import Confirm from "../confirm/Confirm";
 
 const TaskManagerReducer = () => {
   const [name, setName] = useState("");
@@ -83,7 +84,8 @@ const TaskManagerReducer = () => {
 
   return (
     <div className="--bg-primary">
-      <Alert />
+      {/* <Alert /> */}
+      <Confirm />
       <h1 className="--text-center --text-light">Tasks ManageR</h1>
       <div className="--flex-center --p">
         <div className="--card --bg-light --width-500px --p --flex-center">
