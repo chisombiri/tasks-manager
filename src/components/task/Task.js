@@ -11,7 +11,7 @@ const Task = ({
   completeTask,
 }) => {
   return (
-    <div className={complete ? "task complete" : "task"}>
+    <div key={id} className={complete ? "task complete" : "task"}>
       <span>
         <p>
           <b>Task:</b> {name}

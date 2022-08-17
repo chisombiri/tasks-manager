@@ -1,20 +1,76 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useReducer } from "react";
 import useLocalStorage from "use-local-storage";
 import "./task-manager.css";
 import Task from "../task/Task";
 import Alert from "../alert/Alert";
 import Confirm from "../confirm/Confirm";
 
+const taskReducer = (state, action) => {
+  switch (action.type) {
+    case "EMPTY_FIELD":
+      return {
+        ...state,
+        isAlertOpen: true,
+        alertContent: "Please Enter a task and date",
+        alertClass: "danger",
+      };
+    case "CLOSE_ALERT":
+      return {
+        ...state,
+        isAlertOpen: false,
+      };
+    case "ADD_TASK":
+      const allTasks = [...state.tasks, action.payload]; //adding all the tasks gotten from the payload object
+      return {
+        ...state,
+        tasks: allTasks,
+        isAlertOpen: true,
+        alertContent: "Task added successfully",
+        alertClass: "success",
+      };
+    case "OPEN_EDIT_MODAL":
+      return {
+        ...state,
+        taskID: action.payload,
+        isEditModalOpen: true,
+        modalTitle: "Edit Task",
+        modalMsg: "You are about to edit this task",
+        modalActionText: "Edit",
+      };
+    case "EDIT_TASK":
+      return { ...state, isEditing: true, isEditModalOpen: false };
+    case "CLOSE_MODAL":
+      return { ...state, isEditModalOpen: false };
+    default:
+      return state;
+  }
+};
+
+//component
+
 const TaskManagerReducer = () => {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
-  //const [tasks, setTasks] = useState([]);
 
   //storing to local storage
   const [tasks, setTasks] = useLocalStorage("tasks", []);
 
-  const [taskID, setTaskID] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  //initial state should have tasks from local storage
+  const initialState = {
+    tasks,
+    taskID: null,
+    isEditing: false,
+    isAlertOpen: false,
+    alertContent: "This is an alert",
+    alertClass: "danger",
+    isEditModalOpen: false,
+    isDeleteModalOpen: false,
+    modalTitle: "Delete Task",
+    modalMsg: "You're about to delete this task",
+    modalActionText: "OK",
+  };
+
+  const [state, dispatch] = useReducer(taskReducer, initialState);
 
   //focus on name input on render
   const nameInputRef = useRef(null);
@@ -23,69 +79,82 @@ const TaskManagerReducer = () => {
     nameInputRef.current.focus();
   });
 
+  const closeAlert = () => {
+    dispatch({
+      type: "CLOSE_ALERT",
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !date) {
-      alert("Please enter your task details");
-    } else if (name && date && isEditing) {
-      setTasks(
-        tasks.map((task) => {
-          if (task.id === taskID) {
-            return { ...task, name: name, date: date, complete: false };
-          }
-          return task;
-        })
-      );
-      setDate("");
-      setName("");
-      setIsEditing(false);
-      setTaskID(null);
-    } else {
+      dispatch({
+        type: "EMPTY_FIELD",
+      });
+    }
+
+    if (name && date) {
       const newTask = {
-        id: Date.now(),
+        id: date.now,
         name,
-        date, //es6, no need to specify value since it's same with property
+        date,
         complete: false,
       };
-      setTasks([...tasks, newTask]);
+      dispatch({
+        type: "ADD_TASK",
+        payload: newTask,
+      });
       setName("");
       setDate("");
+      setTasks([...tasks, newTask]);
     }
   };
 
-  const editTask = (id) => {
-    // console.log(id);
-    const currTask = tasks.find((task) => task.id === id);
-    // console.log(currTask);
-    setIsEditing(true);
-    setTaskID(id);
-    setName(currTask.name);
-    setDate(currTask.date);
+  const openEditModal = (id) => {
+    dispatch({
+      type: "OPEN_EDIT_MODAL",
+      payload: id,
+    });
   };
 
-  const deleteTask = (id) => {
-    //confirm dialog box to confirm delete or not
-    if (window.confirm("Delete this task?") === true) {
-      const newTasks = tasks.filter((task) => task.id !== id);
-      setTasks(newTasks);
-    }
+  const editTask = () => {
+    const id = state.taskID;
+    dispatch({
+      type: "EDIT_TASK",
+      payload: id,
+    });
   };
 
-  const completeTask = (id) => {
-    setTasks(
-      tasks.map((task) => {
-        if (task.id === id) {
-          return { ...task, complete: true };
-        }
-        return task;
-      })
-    );
+  const deleteTask = (id) => {};
+
+  const completeTask = (id) => {};
+
+  const closeModal = () => {
+    dispatch({
+      type: "CLOSE_MODAL",
+    });
   };
 
   return (
     <div className="--bg-primary">
-      {/* <Alert /> */}
-      <Confirm />
+      {state.isAlertOpen && (
+        <Alert
+          alertContent={state.alertContent}
+          alertClass={state.alertClass}
+          onCloseAlert={closeAlert}
+        />
+      )}
+
+      {state.isEditModalOpen && (
+        <Confirm
+          modalTitle={state.modalTitle}
+          modalMsg={state.modalMsg}
+          modalAction={editTask}
+          modalActionText={state.modalActionText}
+          onCloseModal={closeModal}
+        />
+      )}
+
       <h1 className="--text-center --text-light">Tasks ManageR</h1>
       <div className="--flex-center --p">
         <div className="--card --bg-light --width-500px --p --flex-center">
@@ -116,12 +185,12 @@ const TaskManagerReducer = () => {
             </div>
             <button
               className={
-                isEditing
+                state.isEditing
                   ? "--btn --btn-danger --btn-block"
                   : "--btn --btn-success --btn-block"
               }
             >
-              {isEditing ? "Edit Task" : "Save Task"}
+              {state.isEditing ? "Edit Task" : "Save Task"}
             </button>
           </form>
         </div>
@@ -133,17 +202,15 @@ const TaskManagerReducer = () => {
 
           {/* Individual Task */}
 
-          {tasks.length === 0 ? (
+          {state.tasks.length === 0 ? (
             <p className="--text-light">No task added yet...</p>
           ) : (
             <div>
-              {tasks.map((task) => {
-                const { id } = task;
+              {state.tasks.map((task) => {
                 return (
                   <Task
-                    key={id}
                     {...task}
-                    editTask={editTask}
+                    editTask={openEditModal}
                     deleteTask={deleteTask}
                     completeTask={completeTask}
                   />
