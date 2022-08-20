@@ -22,6 +22,8 @@ const taskReducer = (state, action) => {
       };
     case "ADD_TASK":
       const allTasks = [...state.tasks, action.payload]; //adding all the tasks gotten from the payload object
+      //update task in Local Storage
+      localStorage.setItem("tasks", JSON.stringify(allTasks));
       return {
         ...state,
         tasks: allTasks,
@@ -56,6 +58,9 @@ const taskReducer = (state, action) => {
         state.tasks[taskIndex] = updatedTask;
       }
 
+      //update edited task in local storage
+      localStorage.setItem("tasks", JSON.stringify(state.tasks));
+
       return {
         ...state,
         isEditing: false,
@@ -75,6 +80,9 @@ const taskReducer = (state, action) => {
     case "DELETE_TASK":
       const deleteId = action.payload;
       const newTasks = state.tasks.filter((task) => task.id !== deleteId);
+      //update tasks in local storage when deleted
+      localStorage.setItem("tasks", JSON.stringify(newTasks));
+
       return {
         ...state,
         tasks: newTasks,
@@ -105,6 +113,8 @@ const taskReducer = (state, action) => {
 
       //console.log(completedTask);
 
+      localStorage.setItem("tasks", JSON.stringify(state.tasks));
+
       return {
         ...state,
         isAlertOpen: true,
@@ -124,11 +134,13 @@ const TaskManagerReducer = () => {
   const [date, setDate] = useState("");
 
   //storing to local storage
-  const [tasks, setTasks] = useLocalStorage("tasks", []);
+  // const [tasks, setTasks] = useLocalStorage("tasks", []);
 
   //initial state should have tasks from local storage
   const initialState = {
-    tasks,
+    tasks: localStorage.getItem("tasks")
+      ? JSON.parse(localStorage.getItem("tasks"))
+      : [],
     taskID: null,
     isEditing: false,
     isAlertOpen: false,
@@ -177,15 +189,15 @@ const TaskManagerReducer = () => {
       });
       setName("");
       setDate("");
-      //update task in local storage
-      setTasks(
-        tasks.map((task) => {
-          if (task.id === updatedTask.id) {
-            return { ...task, name, date, complete: false };
-          }
-          return task;
-        })
-      );
+
+      // setTasks(
+      //   tasks.map((task) => {
+      //     if (task.id === updatedTask.id) {
+      //       return { ...task, name, date, complete: false };
+      //     }
+      //     return task;
+      //   })
+      // );
       return; //break out when this condition is met
     }
 
@@ -202,7 +214,7 @@ const TaskManagerReducer = () => {
       });
       setName("");
       setDate("");
-      setTasks([...tasks, newTask]);
+      //setTasks([...tasks, newTask]);
     }
   };
 
@@ -238,8 +250,8 @@ const TaskManagerReducer = () => {
       type: "DELETE_TASK",
       payload: id,
     });
-    const newTasks = tasks.filter((task) => task.id !== id);
-    setTasks(newTasks);
+    // const newTasks = tasks.filter((task) => task.id !== id);
+    // setTasks(newTasks);
     closeModal();
   };
 
@@ -249,14 +261,14 @@ const TaskManagerReducer = () => {
       payload: id,
     });
 
-    setTasks(
-      tasks.map((task) => {
-        if (task.id === id) {
-          return { ...task, complete: true };
-        }
-        return task;
-      })
-    );
+    // setTasks(
+    //   tasks.map((task) => {
+    //     if (task.id === id) {
+    //       return { ...task, complete: true };
+    //     }
+    //     return task;
+    //   })
+    // );
   };
 
   const closeModal = () => {
